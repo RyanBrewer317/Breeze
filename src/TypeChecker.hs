@@ -172,7 +172,10 @@ typecheckStatement source stmt scope typeScope expectedType =
             return NoType
         Parser.DotAssignmentStatement pos struct field val -> do
             structType <- typeOf source scope typeScope struct
-            let (StructType fields) = structType
+            let fields = case structType of
+                    (StructType f) -> f
+                    (InterfaceType f) -> f
+                    _ -> error $ show structType
             let typ = fromList (map (\(a, b)->(b, a)) fields) ! field
             typecheckExpression source scope typeScope val typ
             return NoType

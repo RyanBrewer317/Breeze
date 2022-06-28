@@ -331,6 +331,8 @@ evalType scope expr = case expr of
                 _ -> error ""
     Parser.StructTypeLiteral _ fields ->
         TC.StructType $ map (first (evalType scope)) fields
+    Parser.InterfaceLiteral _ fields ->
+        TC.InterfaceType $ map (first (evalType scope)) fields
     _ -> error ""
 
 argsToTupleType :: TC.TypeScope -> [Parser.Expression] -> TC.Type
