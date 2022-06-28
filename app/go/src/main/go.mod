@@ -19,6 +19,6 @@ require (
 )
 
 require (
-	breeze.ryanbrewer.page/ast v0.0.0-00010101000000-000000000000 // direct
+	breeze.ryanbrewer.page/ast v0.0.0-00010101000000-000000000000 // indirect
 	breeze.ryanbrewer.page/code v0.0.0-00010101000000-000000000000 // indirect
 )
