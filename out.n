@@ -1,0 +1,9 @@
+5 =Person $1 (String 1 name =ryan {0 1 name :2 4 'R' 'y' 'a' 'n' =people :4 1 (ryan 0 #=i #0 -6 < (i 5 #1 =i -5 + (i 5 #1 {1 .[0 (people 4 (i 5 name :2 4 'C' 'o' 'o' 'l' !\7 (print 8 *1 .2 (ryan 0 name 9 struct{[]Char name}
+Type
+[]Char
+Char
+[]struct{[]Char name}
+Int
+Bool
+Void
+[]Char->Void

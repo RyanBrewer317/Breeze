@@ -1,0 +1,15 @@
+Test suite test-parser: RUNNING...
+Test case Parser.nullLiteral parses null: Pass
+Test case Parser.boolLiteral parses true and false: Pass
+Test case Parser.identLiteral parses identifiers: Pass
+Test case Parser.intLiteral parses integers: Pass
+Test case Parser.floatLiteral parses floats: Pass
+Test case Parser.charLiteral parses characters: Pass
+Test case Parser.stringLiteral parses strings: Pass
+Test case Parser.expression parses arrays: Pass
+Test case Parser.tupleLiteral parses tuples: Pass
+Test case Parser.expression parses ternary operators: Pass
+Test case Parser.expression parses array and tuple indices: Fail "Falsified
+(after 1 test):"
+Test suite test-parser: FAIL
+Test suite logged to: /home/ryan/Breeze/dist-newstyle/build/x86_64-linux/ghc-8.6.5/breeze-0.1.0.0/t/test-parser/test/breeze-0.1.0.0-test-parser.log

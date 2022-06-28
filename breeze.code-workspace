@@ -1,0 +1,26 @@
+{
+    "folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "app/go/src/main"
+		},
+		{
+			"path": "app/go/src/ast"
+		},
+		{
+			"path": "app/go/src/parser"
+		},
+		{
+			"path": "app/go/src/code"
+		},
+		{
+			"path": "app/go/src/compiler"
+		},
+		{
+			"path": "app/go/src/vm"
+		}
+	],
+    "settings": {}
+}
