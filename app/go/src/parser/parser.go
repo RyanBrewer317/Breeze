@@ -154,6 +154,17 @@ func ParseExpression(inp string) (ast.Expression, int) {
 		obj, c := ParseExpression(inp[2+len(fullTypeInt_str):])
 		name := getOperand(inp[3+c+len(fullTypeInt_str):])
 		return ast.Dot{TypeInt: fullTypeInt, Obj: obj, FieldName: name}, 3 + c + len(name) + len(fullTypeInt_str)
+	case 'l':
+		fullTypeInt_str := getOperand(inp[1:])
+		fullTypeInt, _ := strconv.Atoi(fullTypeInt_str)
+		argsExpr, c := ParseExpression(inp[2+len(fullTypeInt_str):])
+		argsTuple := argsExpr.(ast.Tuple)
+		args := make([]ast.Ident, len(argsTuple.Exprs))
+		for i := 0; i < len(argsTuple.Exprs); i++ {
+			args[i] = argsTuple.Exprs[i].(ast.Ident)
+		}
+		block, c2 := ParseStatement(inp[3+len(fullTypeInt_str)+c:])
+		return ast.Lambda{TypeInt: fullTypeInt, Args: args, Block: block.(ast.Block)}, 3 + len(fullTypeInt_str) + c + c2
 	}
 	return nil, 0
 }

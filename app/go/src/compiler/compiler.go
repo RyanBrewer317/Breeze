@@ -361,6 +361,38 @@ func (c *Compiler) CompileStatement(stmt ast.Statement) ([]int, error) {
 
 func (c *Compiler) CompileExpression(expr ast.Expression) error {
 	switch expr := expr.(type) {
+	case ast.Lambda:
+		c.enterScope()
+		for _, p := range expr.Args {
+			c.symbolTable.Define(p.Name)
+		}
+		breaks := make([]int, 0)
+		for _, s := range expr.Block.Statements {
+			stmtBreaks, err := c.CompileStatement(s)
+			if err != nil {
+				return err
+			}
+			breaks = append(breaks, stmtBreaks...)
+		}
+		if !c.lastInstructionIs(code.OpReturnValue) {
+			c.emit(code.OpReturn)
+		}
+		breakJumpPos := len(c.currentInstructions())
+		for i := 0; i < len(breaks); i++ {
+			c.changeOperand(breaks[i], breakJumpPos)
+		}
+		freeSymbols := c.symbolTable.FreeSymbols
+		numLocals := c.symbolTable.numDefinitions
+		instructions := c.leaveScope()
+		for _, s := range freeSymbols {
+			c.loadSymbol(s)
+		}
+		compiledFn := &ast.CompiledFunction{
+			Instructions:  instructions,
+			NumLocals:     numLocals,
+			NumParameters: len(expr.Args)}
+		fnIndex := c.addConstant(compiledFn)
+		c.emit(code.OpClosure, fnIndex, len(freeSymbols))
 	case ast.Infix:
 		if expr.Op == "<" || expr.Op == "<=" {
 			err := c.CompileExpression(expr.Right)

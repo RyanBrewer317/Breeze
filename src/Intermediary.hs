@@ -41,6 +41,7 @@ expressionToIntermediary typesList expr = case expr of
     TypeAnnotations.Struct _ typ fields ->          "{" ++ sho typ ++ " " ++ show (length fields) ++ " " ++ unwords (map (\(name, val)->name ++ " " ++ expressionToIntermediary typesList val) fields)
     TypeAnnotations.Dot _ typ expr fieldName ->     "." ++ sho typ ++ " " ++ expressionToIntermediary typesList expr ++ " " ++ fieldName
     TypeAnnotations.InterfaceType _ fields ->       "}" ++ show (length fields) ++ " " ++ unwords (map (\(a, name)->expressionToIntermediary typesList a ++ " " ++ name) fields)
+    TypeAnnotations.Lambda _ typ args block ->      "l" ++ sho typ ++ " " ++ expressionToIntermediary typesList args ++ " " ++ statementToIntermediary typesList block
     where sho typ = typeToStringInt typ typesList
 
 primitiveToIntermediary :: Parser.Expression -> String

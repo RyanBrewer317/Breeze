@@ -1,9 +1,9 @@
-6 =Person $2 (String 1 name (Int 1 age =Named }1 (String 1 name =ryan {0 2 name :2 4 'R' 'y' 'a' 'n' age #19 =named :5 1 (ryan 0 #=i #0 -6 < (i 4 #1 =i -4 + (i 4 #1 {1 .[0 (named 5 (i 4 name :2 4 'C' 'o' 'o' 'l' !\7 (print 8 *1 .2 (ryan 0 name 9 struct{[]Char name, Int age}
+7 =Person $2 (String 1 name (Int 1 age =Named }1 (String 1 name =ryan {0 2 name :2 4 'R' 'y' 'a' 'n' age #19 =named :5 1 (ryan 0 #=i #0 -6 < (i 4 #1 =i -4 + (i 4 #1 {1 .[0 (named 5 (i 4 name :2 4 'C' 'o' 'o' 'l' =p (print 7 !\8 l7 *1 (a 2 {1 !\8 (p 7 *1 (a 1 *1 .2 (ryan 0 name 9 struct{[]Char name, Int age}
 Type
 []Char
 Char
 Int
 []interface{[]Char name}
 Bool
-Void
 []Char->Void
+Void

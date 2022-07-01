@@ -286,10 +286,21 @@ typeOf source scope typeScope expr = case expr of
         expectedType <- typeOf source scope typeScope cons
         typecheckExpression source scope typeScope alt expectedType
         return expectedType
-    -- Parser.CastLiteral pos typeExpr expr -> do
-    --     newType <- evalType source typeScope typeExpr
-    --     oldType <- typeOf source scope typeScope expr
-    --     if combineTypes oldType newType == oldType then return newType else Left $ stringErr source pos "TypeError: cannot cast from " ++ show oldType ++ " to " ++ show newType
+    Parser.LambdaLiteral _ typ argsTuple block -> do
+        returnType <- evalType source typeScope typ
+        let (Parser.TupleLiteral _ args) = argsTuple
+        argType <- argsToTupleType source typeScope args
+        case mapM (typeOf source scope typeScope) args of -- this just makes sure they're written validly, no undefined type constants etc
+            Left s -> Left s
+            Right _ -> return ()
+        case mapM (\ (Parser.IdentDeclarationLiteral _ te n) -> evalType source typeScope te >>= \t -> return (n, t)) args of
+                Left s -> Left s
+                Right tns ->
+                    let argScope = fromList tns in
+                        case block of
+                            Parser.BlockStatement pos statements -> typecheckBlock source pos (argScope `union` scope) typeScope (argScope `union` startingScope) startingTypeScope returnType NoType statements
+                            _ -> error "" -- the statement of a function statement can only be a BlockStatement
+        return $ FunctionType argType returnType
     Parser.StructTypeLiteral _ fields -> mapM_ (\(typeExpr, _)->evalType source typeScope typeExpr) fields >> return TypeType
     Parser.StructLiteral pos typeExpr fields -> do
         typ <- evalType source typeScope typeExpr
@@ -397,6 +408,7 @@ evalType source scope expr = case expr of
         case op of
             "+" -> Right $ UnionType leftType rightType
             "*" -> Right $ TupleType leftType rightType
+            "->" -> Right $ FunctionType leftType rightType
             _ -> Left $ stringErr source pos "TypeError: operation does not return a type"
     Parser.PrefixLiteral pos op right -> do
         rightType <- evalType source scope right

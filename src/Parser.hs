@@ -2,6 +2,7 @@ module Parser where
 
 import qualified Text.Parsec as P
 import Text.Parsec ((<|>), (<?>))
+import qualified Control.Monad
 
 data Statement = DeclarationStatement P.SourcePos Expression String Expression -- type name value
                   | TypeDeclaration P.SourcePos String Expression -- name value (the value will be evaluated at compile time and used in typechecking)
@@ -36,9 +37,8 @@ data Expression = NullLiteral P.SourcePos
                     | StructLiteral P.SourcePos Expression [(String, Expression)] -- type [(field-name, field-val)]
                     | DotLiteral P.SourcePos Expression String -- expr.fieldName
                     | InterfaceLiteral P.SourcePos [(Expression, String)] -- [(type, name)]
-                    -- | CastLiteral P.SourcePos Expression Expression -- type expr
                     -- | HashLiteral P.SourcePos Expression (Map String Expression) -- type (map string vals)
-                    -- | LambdaLiteral P.SourcePos Expression Expression Statement -- type tuple-args block
+                    | LambdaLiteral P.SourcePos Expression Expression Statement -- type tuple-args block
                     | TupleLiteral P.SourcePos [Expression] -- [vals]
                     | IndexLiteral P.SourcePos Expression Expression -- array/tuple/hash index
                     | FunctionCallLiteral P.SourcePos Expression Expression -- function tuple-args
@@ -140,17 +140,18 @@ tupleLiteral = do
         x:xs -> TupleLiteral pos args
         [] -> NullLiteral pos
 
--- castLiteral = do
---     typ <- P.try tupleLiteral
---     case typ of
---         NullLiteral _ -> return typ
---         TupleLiteral _ _ -> return typ
---         _ -> do
---             pos <- P.getPosition
---             cast <- P.optionMaybe expression
---             return $ case cast of
---                 Nothing -> typ
---                 Just c -> CastLiteral pos typ c
+lambdaLiteral = do
+    pos <- P.getPosition
+    P.char '\\'
+    typ <- typeLiteral
+    argsPos <- P.getPosition
+    P.char '('
+    ws
+    args <- commaSep (identDeclarationLiteral <?> "arguments")
+    ws
+    P.char ')'
+    ws
+    LambdaLiteral pos typ (TupleLiteral argsPos args) <$> blockStatement
 
 structTypeLiteral = do
     pos <- P.getPosition
@@ -185,14 +186,14 @@ structLiteral = do
             ws
             P.char ':'
             expr <- expression
-            return (name, expr)  
+            return (name, expr)
     P.char '}'
     return fields
 
 identDeclarationLiteral = do
     pos <- P.getPosition
     (typ, name) <- P.try $ do
-        typ <- expression <?> "type"
+        typ <- typeLiteral <?> "type"
         (IdentLiteral _ name) <- identLiteral <?> "name"
         return (typ, name)
     return $ IdentDeclarationLiteral pos typ name
@@ -241,7 +242,8 @@ innerExpression = do
         <|> structTypeLiteral
         <|> interfaceLiteral
         <|> identLiteral
-        -- <|> castLiteral
+        <|> tupleLiteral
+        <|> lambdaLiteral
         <|> floatLiteral
         <|> intLiteral
         <|> charLiteral
@@ -428,7 +430,7 @@ innerTypeLiteral = do
     pos <- P.getPosition
     maybeArray <- P.optionMaybe $ P.try (P.string "[]" <?> "operator")
     ws
-    lit <- parentheticalLiteral typeLiteral <|> (identLiteral <?> "type")
+    lit <- parentheticalLiteral typeLiteral <|> (identLiteral <?> "type name") <|> structTypeLiteral <|> interfaceLiteral
     lit <- return $ case maybeArray of
         Nothing -> lit
         Just op -> PrefixLiteral pos op lit
@@ -451,13 +453,8 @@ constantLiteral = do
     return lit
 
 parentheticalLiteral :: Parser a -> Parser a
-parentheticalLiteral p = do
-    pos <- P.getPosition
-    P.char '('
-    item <- p
-    P.char ')'
-    return item
-    
+parentheticalLiteral p = P.char '(' *> ws *> p <* ws <* P.char ')'
+
 expressionStatement = P.try (do
     expr <- expression
     case expr of
@@ -508,7 +505,7 @@ statementNoSemicolon = do
 lineComment :: Parser Char
 lineComment = do
     P.try $ P.string "//"
-    P.manyTill P.anyChar (P.char '\n') <?> "line comment"
+    P.manyTill P.anyChar (Control.Monad.void (P.char '\n') <|> P.eof) <?> "line comment"
     return ' '
 
 multilineComment :: Parser Char
@@ -534,7 +531,7 @@ posOf expr = case expr of
     IndexLiteral pos _ _ -> pos
     ArrayLiteral pos _ _ -> pos
     TernaryLiteral pos _ _ _ -> pos
-    -- CastLiteral pos _ _ -> pos
+    LambdaLiteral pos _ _ _ -> pos
     StructTypeLiteral pos _ -> pos
     StructLiteral pos _ _ -> pos
     DotLiteral pos _ _ -> pos

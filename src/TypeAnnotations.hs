@@ -19,6 +19,7 @@ data AnnotatedExpression = Primitive Parser.Expression
                          | Struct Parser.Expression TC.Type [(String, AnnotatedExpression)]
                          | Dot Parser.Expression TC.Type AnnotatedExpression String
                          | InterfaceType Parser.Expression [(AnnotatedExpression, String)]
+                         | Lambda Parser.Expression TC.Type AnnotatedExpression AnnotatedStatement
                          deriving Show
 
 data AnnotatedStatement = Assignment Parser.Statement String AnnotatedExpression
@@ -215,6 +216,12 @@ annotateExpression scope typeScope expr = case expr of
         let (annRight, rightTypes) = annotateExpression scope typeScope right in
         let typ = prefixType op (typeOf annRight) in
             (Prefix expr typ op annRight, typ : rightTypes)
+    Parser.LambdaLiteral _ typ args block ->
+        let returnType = evalType typeScope typ in
+        let (annArgs, argsTypes) = annotateExpression scope typeScope args in
+        let (annBlock, blockTypes) = annotateStatement scope typeScope block in
+        let argsType = typeOf annArgs in
+            (Lambda expr (TC.FunctionType argsType returnType) annArgs annBlock, argsTypes++blockTypes)
     Parser.StructTypeLiteral _ fields -> 
         let typeExprs = map fst fields in
         let (annTypes, typesTall) = unzip $ map (annotateExpression scope typeScope) typeExprs in
@@ -253,10 +260,7 @@ typeOf expr = case expr of
     Ternary _ typ _ _ _ -> typ
     Call _ typ _ _ -> typ
     Index _ typ _ _ -> typ
-    -- Index _ coll idx -> case typeOf coll of
-    --     TC.ArrayType typ -> typ
-    --     TC.TupleType _ _ -> (listToLinkedUnionTypeList . linkedTupleTypeListToList . typeOf) coll
-    --     _ -> undefined
+    Lambda _ typ _ _ -> typ
     Infix _ typ _ _ _ -> typ
     Prefix _ typ _ _ -> typ
     StructType _ _ -> TC.TypeType

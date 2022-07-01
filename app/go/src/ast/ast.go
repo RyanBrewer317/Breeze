@@ -277,6 +277,17 @@ func (d Dot) Type(typeList []string) string {
 	return typeList[d.TypeInt]
 }
 
+type Lambda struct {
+	TypeInt int
+	Args    []Ident
+	Block   Block
+}
+
+func (l Lambda) isExpression() {}
+func (l Lambda) Type(typeList []string) string {
+	return typeList[l.TypeInt]
+}
+
 type Type interface {
 	Expression
 	String() string
